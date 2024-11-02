@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Build OpenSSL
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "OpenSSL branch or tag"
+        required: true
+        default: master
+        type: string
+
+jobs:
+  build-amd64:
+    name: Build OpenSSL (amd64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: openssl/openssl
+          path: openssl
+          ref: ${{ inputs.ref }}
+      - run: ./config --static -static
+        working-directory: openssl
+      - run: make
+        working-directory: openssl
+      - run: mkdir bin
+      - run: cp openssl/apps/openssl bin
+      - run: zip -r9 openssl-amd64.zip bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openssl-amd64.zip
+          path: openssl-amd64.zip
+  build-arm64:
+    name: Build OpenSSL (arm64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: openssl/openssl
+          path: openssl
+          ref: ${{ inputs.ref }}
+      - run: sudo apt-get install -y gcc-aarch64-linux-gnu
+      - run: ./config no-asm --static -static
+        working-directory: openssl
+      - run: make
+        working-directory: openssl
+      - run: mkdir bin
+      - run: cp openssl/apps/openssl bin
+      - run: zip -r9 openssl-arm64.zip bin
+        env:
+          CC: aarch64-linux-gnu-gcc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openssl-arm64.zip
+          path: openssl-arm64.zip
