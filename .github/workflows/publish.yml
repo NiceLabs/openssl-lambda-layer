@@ -21,7 +21,7 @@ jobs:
           repository: openssl/openssl
           path: openssl
           ref: ${{ inputs.ref }}
-      - run: ./config --static -static
+      - run: ./config no-tests --static -static
         working-directory: openssl
       - run: make
         working-directory: openssl
@@ -35,6 +35,8 @@ jobs:
   build-arm64:
     name: Build OpenSSL (arm64)
     runs-on: ubuntu-latest
+    env:
+      CC: aarch64-linux-gnu-gcc
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -43,15 +45,13 @@ jobs:
           path: openssl
           ref: ${{ inputs.ref }}
       - run: sudo apt-get install -y gcc-aarch64-linux-gnu
-      - run: ./config no-asm --static -static
+      - run: ./config no-tests no-asm no-async linux-aarch64 --static -static
         working-directory: openssl
       - run: make
         working-directory: openssl
       - run: mkdir bin
       - run: cp openssl/apps/openssl bin
       - run: zip -r9 openssl-arm64.zip bin
-        env:
-          CC: aarch64-linux-gnu-gcc
       - uses: actions/upload-artifact@v4
         with:
           name: openssl-arm64.zip
